@@ -1,0 +1,26 @@
+# Contoh konfigurasi untuk Custom Role Storage Provider
+# File ini bisa digunakan sebagai referensi untuk system properties
+# Atau bisa di-load sebagai properties file jika diperlukan
+
+# Database Configuration (akan digunakan sebagai fallback jika tidak dikonfigurasi di Keycloak Admin Console)
+quarkus.datasource.user-store.db-kind=mysql
+quarkus.datasource.user-store.username=root
+quarkus.datasource.user-store.password=
+quarkus.datasource.user-store.jdbc.url=jdbc:mysql://host.docker.internal:3306/user_store
+
+# Atau bisa menggunakan environment variables:
+# DB_URL=jdbc:mysql://host.docker.internal:3306/user_store
+# DB_USERNAME=root
+# DB_PASSWORD=
+# DB_DRIVER=com.mysql.cj.jdbc.Driver
+
+# Catatan:
+# 1. Konfigurasi utama tetap dilakukan melalui Keycloak Admin Console
+# 2. System properties dan environment variables digunakan sebagai fallback
+# 3. Untuk menggunakan system properties, set saat menjalankan Keycloak:
+#    -Dquarkus.datasource.user-store.jdbc.url=jdbc:mysql://...
+#    -Dquarkus.datasource.user-store.username=root
+#    -Dquarkus.datasource.user-store.password=
+# 4. persistence.xml adalah opsional - saat ini menggunakan programmatic configuration
+
+

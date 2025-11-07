@@ -1,0 +1,6 @@
+id\co\swamdia\repository\CustomRoleRepository.class
+id\co\swamdia\provider\CustomRoleStorageProviderFactory.class
+id\co\swamdia\service\DatabaseService.class
+id\co\swamdia\entity\CustomRoleEntity.class
+id\co\swamdia\model\CustomRoleModel.class
+id\co\swamdia\provider\CustomRoleStorageProvider.class
