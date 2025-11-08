@@ -4,9 +4,9 @@ import org.jboss.logging.Logger;
 
 import id.co.swamdia.entity.CustomRoleEntity;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.TypedQuery;
 import java.util.List;
 import java.util.Optional;
 

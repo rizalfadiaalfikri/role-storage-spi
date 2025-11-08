@@ -16,8 +16,9 @@
       
       <!-- PostgreSQL -->
       <postgresql.version>42.6.0</postgresql.version>
-      <hibernate.version>5.6.15.Final</hibernate.version>
+      <hibernate.version>6.2.13.Final</hibernate.version>
       <hikari.version>5.0.1</hikari.version>
+      <jakarta-persistence.version>3.1.0</jakarta-persistence.version>
   </properties>
 
   <dependencies>
@@ -48,16 +49,22 @@
             <version>${postgresql.version}</version>
         </dependency>
         
-        <!-- JPA/Hibernate -->
+        <!-- Jakarta Persistence API - Keycloak 26 sudah include -->
         <dependency>
-            <groupId>org.hibernate</groupId>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <version>${jakarta-persistence.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <!-- Hibernate - Keycloak 26 sudah include Hibernate, gunakan yang sudah ada -->
+        <!-- JANGAN include Hibernate dalam JAR karena akan menyebabkan classloader conflict -->
+        <!-- Tapi kita perlu Hibernate untuk compile time (scope provided) -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
             <version>${hibernate.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
-            <version>${hibernate.version}</version>
+            <scope>provided</scope>
         </dependency>
         
         <!-- Connection Pool -->
@@ -86,6 +93,42 @@
                     <source>17</source>
                     <target>17</target>
                 </configuration>
+            </plugin>
+            <!-- Maven Shade Plugin untuk membuat fat JAR dengan semua dependencies -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <!-- Exclude Keycloak dan Hibernate dependencies yang sudah provided -->
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>org.keycloak:*</exclude>
+                                    <exclude>org.jboss.logging:*</exclude>
+                                    <exclude>org.hibernate:*</exclude>
+                                    <exclude>jakarta.persistence:*</exclude>
+                                </excludes>
+                            </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

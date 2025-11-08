@@ -12,7 +12,7 @@ import id.co.swamdia.service.DatabaseService;
 
 import org.jboss.logging.Logger;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;

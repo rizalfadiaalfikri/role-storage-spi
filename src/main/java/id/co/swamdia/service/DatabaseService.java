@@ -8,16 +8,18 @@ import id.co.swamdia.entity.CustomRoleEntity;
 import org.jboss.logging.Logger;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.SessionFactory;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import java.util.Properties;
 
 public class DatabaseService {
     private static final Logger logger = Logger.getLogger(DatabaseService.class);
 
     private HikariDataSource dataSource;
+    private SessionFactory sessionFactory;
     private EntityManagerFactory entityManagerFactory;
 
     public DatabaseService(String jdbcUrl, String username, String password, String driverClass) {
@@ -61,15 +63,19 @@ public class DatabaseService {
             settings.put(AvailableSettings.USE_SECOND_LEVEL_CACHE, "false");
             settings.put(AvailableSettings.USE_QUERY_CACHE, "false");
 
-            ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+            StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
                     .applySettings(settings)
                     .build();
 
             MetadataSources metadataSources = new MetadataSources(serviceRegistry);
             metadataSources.addAnnotatedClass(CustomRoleEntity.class);
 
-            this.entityManagerFactory = metadataSources.buildMetadata()
+            this.sessionFactory = metadataSources.buildMetadata()
                     .buildSessionFactory();
+            
+            // Create EntityManagerFactory wrapper for Hibernate 6
+            // Hibernate 6 uses SessionFactory, we wrap it to provide EntityManagerFactory interface
+            this.entityManagerFactory = new SessionFactoryEntityManagerFactory(sessionFactory);
 
             logger.info("Hibernate EntityManagerFactory initialized for PostgreSQL");
 
@@ -84,6 +90,9 @@ public class DatabaseService {
     }
 
     public void close() {
+        if (sessionFactory != null && sessionFactory.isOpen()) {
+            sessionFactory.close();
+        }
         if (entityManagerFactory != null && entityManagerFactory.isOpen()) {
             entityManagerFactory.close();
         }
