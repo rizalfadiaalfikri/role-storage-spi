@@ -32,10 +32,19 @@ public class CustomRoleRepository {
 
     public List<CustomRoleEntity> findByRealm(String realmId) {
         try {
+            logger.infof("Finding all realm roles for realmId: %s", realmId);
             TypedQuery<CustomRoleEntity> query = entityManager.createNamedQuery(
                     "CustomRoleEntity.findByRealm", CustomRoleEntity.class);
             query.setParameter("realmId", realmId);
-            return query.getResultList();
+            List<CustomRoleEntity> results = query.getResultList();
+            logger.infof("Found %d realm roles for realmId: %s", results.size(), realmId);
+            if (!results.isEmpty()) {
+                logger.debugf("Role names: %s", 
+                        results.stream()
+                                .map(CustomRoleEntity::getName)
+                                .collect(java.util.stream.Collectors.joining(", ")));
+            }
+            return results;
         } catch (Exception e) {
             logger.error("Error finding roles by realm: " + realmId, e);
             return List.of();
@@ -84,13 +93,23 @@ public class CustomRoleRepository {
 
     public List<CustomRoleEntity> search(String realmId, String searchTerm) {
         try {
+            logger.infof("Searching roles for realmId: %s with searchTerm: '%s'", realmId, searchTerm);
             TypedQuery<CustomRoleEntity> query = entityManager.createNamedQuery(
                     "CustomRoleEntity.search", CustomRoleEntity.class);
             query.setParameter("realmId", realmId);
             query.setParameter("search", "%" + searchTerm + "%");
-            return query.getResultList();
+            List<CustomRoleEntity> results = query.getResultList();
+            logger.infof("Found %d roles matching searchTerm '%s' for realmId: %s", 
+                    results.size(), searchTerm, realmId);
+            if (!results.isEmpty()) {
+                logger.debugf("Matching role names: %s", 
+                        results.stream()
+                                .map(CustomRoleEntity::getName)
+                                .collect(java.util.stream.Collectors.joining(", ")));
+            }
+            return results;
         } catch (Exception e) {
-            logger.error("Error searching roles", e);
+            logger.error("Error searching roles for realmId: " + realmId + " with searchTerm: " + searchTerm, e);
             return List.of();
         }
     }

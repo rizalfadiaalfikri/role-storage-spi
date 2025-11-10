@@ -72,6 +72,13 @@
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>${hikari.version}</version>
+            <exclusions>
+                <!-- Exclude SLF4J to avoid conflict with JBoss Logging in Keycloak -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         
         <!-- Logging -->
@@ -114,6 +121,8 @@
                                     <exclude>org.jboss.logging:*</exclude>
                                     <exclude>org.hibernate:*</exclude>
                                     <exclude>jakarta.persistence:*</exclude>
+                                    <!-- Exclude SLF4J to avoid conflict with JBoss Logging -->
+                                    <exclude>org.slf4j:*</exclude>
                                 </excludes>
                             </artifactSet>
                             <filters>

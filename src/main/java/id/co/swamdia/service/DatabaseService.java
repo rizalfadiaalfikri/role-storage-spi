@@ -12,9 +12,15 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.SessionFactory;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import java.util.Properties;
 
+/**
+ * Database service using JPA with Hibernate
+ * Uses Hibernate SessionFactory wrapped as EntityManagerFactory for JPA
+ * compatibility
+ */
 public class DatabaseService {
     private static final Logger logger = Logger.getLogger(DatabaseService.class);
 
@@ -51,6 +57,11 @@ public class DatabaseService {
         logger.info("PostgreSQL database connection pool initialized");
     }
 
+    /**
+     * Initialize Hibernate and create EntityManagerFactory
+     * Uses Hibernate SessionFactory wrapped as EntityManagerFactory for JPA
+     * compatibility
+     */
     private void initializeHibernate() {
         try {
             Properties settings = new Properties();
@@ -72,10 +83,10 @@ public class DatabaseService {
 
             this.sessionFactory = metadataSources.buildMetadata()
                     .buildSessionFactory();
-            
-            // Create EntityManagerFactory wrapper for Hibernate 6
-            // Hibernate 6 uses SessionFactory, we wrap it to provide EntityManagerFactory interface
-            this.entityManagerFactory = new SessionFactoryEntityManagerFactory(sessionFactory);
+
+            // Wrap SessionFactory as EntityManagerFactory for JPA compatibility
+            // Hibernate 6 SessionFactory can be used as EntityManagerFactory
+            this.entityManagerFactory = new EntityManagerFactoryWrapper(sessionFactory);
 
             logger.info("Hibernate EntityManagerFactory initialized for PostgreSQL");
 
@@ -100,5 +111,97 @@ public class DatabaseService {
             dataSource.close();
         }
         logger.info("PostgreSQL database connections closed");
+    }
+
+    /**
+     * Simple wrapper to adapt Hibernate SessionFactory to EntityManagerFactory
+     * In Hibernate 6, SessionFactory can be used directly as EntityManagerFactory
+     */
+    private static class EntityManagerFactoryWrapper implements EntityManagerFactory {
+        private final SessionFactory sessionFactory;
+
+        public EntityManagerFactoryWrapper(SessionFactory sessionFactory) {
+            this.sessionFactory = sessionFactory;
+        }
+
+        @Override
+        public EntityManager createEntityManager() {
+            // Hibernate 6: SessionFactory.openSession() returns Session which implements
+            // EntityManager
+            return sessionFactory.openSession();
+        }
+
+        @Override
+        @SuppressWarnings("rawtypes")
+        public EntityManager createEntityManager(java.util.Map map) {
+            return createEntityManager();
+        }
+
+        @Override
+        public EntityManager createEntityManager(jakarta.persistence.SynchronizationType synchronizationType) {
+            return createEntityManager();
+        }
+
+        @Override
+        @SuppressWarnings("rawtypes")
+        public EntityManager createEntityManager(jakarta.persistence.SynchronizationType synchronizationType,
+                java.util.Map map) {
+            return createEntityManager();
+        }
+
+        @Override
+        public jakarta.persistence.criteria.CriteriaBuilder getCriteriaBuilder() {
+            return sessionFactory.getCriteriaBuilder();
+        }
+
+        @Override
+        public jakarta.persistence.metamodel.Metamodel getMetamodel() {
+            return sessionFactory.getMetamodel();
+        }
+
+        @Override
+        public boolean isOpen() {
+            return sessionFactory != null && !sessionFactory.isClosed();
+        }
+
+        @Override
+        public void close() {
+            if (sessionFactory != null && !sessionFactory.isClosed()) {
+                sessionFactory.close();
+            }
+        }
+
+        @Override
+        public java.util.Map<String, Object> getProperties() {
+            return java.util.Map.of();
+        }
+
+        @Override
+        public jakarta.persistence.Cache getCache() {
+            return sessionFactory.getCache();
+        }
+
+        @Override
+        public jakarta.persistence.PersistenceUnitUtil getPersistenceUnitUtil() {
+            return sessionFactory.getPersistenceUnitUtil();
+        }
+
+        @Override
+        public void addNamedQuery(String name, jakarta.persistence.Query query) {
+            // No-op
+        }
+
+        @Override
+        public <T> T unwrap(Class<T> cls) {
+            if (cls.isInstance(sessionFactory)) {
+                return cls.cast(sessionFactory);
+            }
+            throw new IllegalArgumentException("Cannot unwrap to " + cls.getName());
+        }
+
+        @Override
+        public <T> void addNamedEntityGraph(String graphName, jakarta.persistence.EntityGraph<T> entityGraph) {
+            // No-op
+        }
     }
 }
